@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ruffle Player</title>
+  <style>
+    html, body, #container { height: 100%; margin: 0; }
+    #container { display: grid; place-items: center; background: #111; }
+    #player { width: 100%; height: 100%; max-width: 100%; max-height: 100%; }
+  </style>
+  <!-- Ruffle'ı CDN'den yükle -->
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+</head>
+<body>
+  <div id="container">
+    <div id="player"></div>
+  </div>
+
+  <script>
+    // URL parametresinden ?file=... al
+    const params = new URLSearchParams(window.location.search);
+    const file = params.get("file");
+
+    // Güvenlik: bazı barındırmalarda SWF 'indiriyor' gibi görünür; Ruffle zaten indirip oynatır.
+    // https zorunludur (Wix sayfan zaten https).
+
+    (async () => {
+      const ruffle = window.RufflePlayer ? window.RufflePlayer.newest() : null;
+      if (!ruffle) {
+        document.body.innerHTML = "<p style='color:#fff'>Ruffle yüklenemedi.</p>";
+        return;
+      }
+      const player = ruffle.createPlayer();
+      document.getElementById("player").appendChild(player);
+
+      // Tam ekran tuşunu aktif etmek için:
+      player.style.outline = "none";
+
+      // Boyutlandırma: wrapper %100 alanı kaplar; SWF içeriği buna sığar.
+      if (file) {
+        try {
+          await player.load({ url: file });
+          player.play();
+        } catch (e) {
+          console.error(e);
+          document.body.insertAdjacentHTML("beforeend",
+            "<p style='color:#fff'>Dosya yüklenemedi.</p>");
+        }
+      } else {
+        document.body.insertAdjacentHTML("beforeend",
+          "<p style='color:#fff'>SWF dosyası belirtilmedi (?file=...)</p>");
+      }
+    })();
+  </script>
+</body>
+</html>
+<style>
+  #fullscreen-btn {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1px solid #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: sans-serif;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  #fullscreen-btn:hover {
+    background: rgba(255,255,255,0.3);
+  }
+</style>
+<button id="fullscreen-btn">Tam Ekran</button>
+
+<script>
+  document.getElementById("fullscreen-btn").addEventListener("click", () => {
+    const container = document.getElementById("container");
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      container.requestFullscreen().catch(err => {
+        console.error(`Tam ekran hatası: ${err.message}`);
+      });
+    }
+  });
+</script>
