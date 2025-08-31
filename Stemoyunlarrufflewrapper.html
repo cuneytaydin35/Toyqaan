@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ruffle Wrapper (Dinamik + Fullscreen)</title>
+  <title>Ruffle Wrapper (Dinamik + Fullscreen + Autoplay)</title>
   <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
   <style>
     :root { --w: 800; --h: 600; }
-
     html, body { height:100%; margin:0; background:transparent; }
 
     .ruffle-wrap {
@@ -21,18 +20,11 @@
       background:transparent!important;
     }
 
-    /* Buton için ayrı satır */
-    .controls {
-      text-align: right;
-      padding: 10px 15px 0 0; /* sağdan 15px, üstten 10px */
-    }
+    .controls { text-align:right; padding:10px 15px 0 0; }
     .fs-btn {
-      padding:10px 14px;
-      font:600 14px system-ui;
-      background:rgba(0,0,0,.55);
-      color:#fff;
-      border:0; border-radius:12px;
-      cursor:pointer;
+      padding:10px 14px; font:600 14px system-ui;
+      background:rgba(0,0,0,.55); color:#fff;
+      border:0; border-radius:12px; cursor:pointer;
     }
 
     .ruffle-wrap:fullscreen,
@@ -43,12 +35,9 @@
   </style>
 </head>
 <body>
-  <!-- SWF oynatıcı -->
   <div class="ruffle-wrap" id="ruffleWrap" style="--w:800;--h:600;">
     <ruffle-player id="rufflePlayer"></ruffle-player>
   </div>
-
-  <!-- Alt kısımda sağa hizalı kontrol -->
   <div class="controls">
     <button class="fs-btn" id="fsBtn" type="button">Tam ekran</button>
   </div>
@@ -61,11 +50,17 @@
       const player = ruffle.createPlayer();
       placeholder.replaceWith(player);
 
-      // URL parametresinden "file" al
+      // URL parametresinden SWF seç
       const params = new URLSearchParams(window.location.search);
       const file = params.get("file") || "your.swf";
 
-      player.load({ url: file });
+      // SWF'i yükle
+      player.load({ url: file }).then(() => {
+        // Yüklenince otomatik başlatmayı dene
+        player.play().catch(err => {
+          console.warn("Autoplay engellendi, kullanıcı etkileşimi bekleniyor.", err);
+        });
+      });
 
       // Tam ekran butonu
       const fsBtn = document.getElementById('fsBtn');
