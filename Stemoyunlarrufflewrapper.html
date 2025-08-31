@@ -3,129 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ruffle Wrapper (Fullscreen + Responsive)</title>
+  <title>Ruffle Wrapper (Dinamik + Fullscreen)</title>
   <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
   <style>
-    :root {
-      /* SWF'nin orijinal boyutu — oran için kullanılır */
-      --w: 800; /* genişlik (px) */
-      --h: 600; /* yükseklik (px) */
-    }
+    :root { --w: 800; --h: 600; }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      background: transparent; /* sayfa arkaplanı */
-    }
+    html, body { height:100%; margin:0; background:transparent; }
 
-    /* Dış sarmalayıcı: oranı koruyarak responsive davranış */
     .ruffle-wrap {
-      position: relative;
-      width: 100%;
-      max-width: 100vw;
-      /* En-boy oranını koru; tarayıcılar aspect-ratio destekliyor */
-      aspect-ratio: calc(var(--w) / var(--h));
-      margin: 0;
-      background: transparent; /* arkaplan transparan kalsın */
-      overflow: hidden;
+      position:relative; width:100%; max-width:100vw;
+      aspect-ratio: calc(var(--w)/var(--h));
+      background:transparent; overflow:hidden;
     }
-
-    /* Ruffle player alanı tamamen doldursun */
     .ruffle-wrap ruffle-player,
     .ruffle-wrap .ruffle-player {
-      display: block;
-      width: 100%;
-      height: 100%;
-      background: transparent !important;
+      width:100%; height:100%; display:block;
+      background:transparent!important;
     }
-
-    /* Sağ alttaki tam ekran düğmesi */
     .fs-btn {
-      position: absolute;
-      right: 15px;
-      bottom: 15px; /* “15 birim altına” */
-      z-index: 10;
-      padding: 10px 14px;
-      font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: #fff;
-      background: rgba(0,0,0,.55);
-      border: 0;
-      border-radius: 12px;
-      cursor: pointer;
-      backdrop-filter: saturate(120%) blur(2px);
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+      position:absolute; right:15px; bottom:15px;
+      padding:10px 14px; font:600 14px system-ui;
+      background:rgba(0,0,0,.55); color:#fff;
+      border:0; border-radius:12px; cursor:pointer;
     }
-    .fs-btn:active { transform: translateY(1px); }
-
-    /* Gerçek tam ekran modunda tüm ekranı doldur */
-    .ruffle-wrap:fullscreen {
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: none;
-      aspect-ratio: auto;
-      background: transparent;
-    }
-
-    /* Safari için -webkit- varyantı */
+    .ruffle-wrap:fullscreen,
     .ruffle-wrap:-webkit-full-screen {
-      width: 100vw !important;
-      height: 100vh !important;
-      max-width: none;
-      aspect-ratio: auto;
-      background: transparent;
+      width:100vw!important; height:100vh!important;
+      max-width:none; aspect-ratio:auto;
     }
   </style>
 </head>
 <body>
-  <!-- İstersen --w/--h değerlerini SWF'ine göre güncelle -->
-  <div class="ruffle-wrap" id="ruffleWrap" style="--w:800; --h:600;">
+  <div class="ruffle-wrap" id="ruffleWrap" style="--w:800;--h:600;">
     <ruffle-player id="rufflePlayer"></ruffle-player>
-    <button class="fs-btn" id="fsBtn" type="button" aria-label="Tam ekran">Tam ekran</button>
+    <button class="fs-btn" id="fsBtn" type="button">Tam ekran</button>
   </div>
 
   <script>
-    // Ruffle'ı başlat ve SWF'i yükle
-    (function () {
+    (function(){
       const ruffle = window.RufflePlayer?.newest() || window.RufflePlayer;
       const wrap = document.getElementById('ruffleWrap');
       const placeholder = document.getElementById('rufflePlayer');
-
-      // Player'ı oluşturup yerleştir
       const player = ruffle.createPlayer();
-      player.classList.add('ruffle-player');
-      player.style.background = 'transparent';
       placeholder.replaceWith(player);
 
-      // SWF dosyanın yolunu buraya ver
-      player.load({ url: 'your.swf' });
+      // URL parametresinden "file" al
+      const params = new URLSearchParams(window.location.search);
+      const file = params.get("file") || "your.swf";
 
-      // Tam ekran düğmesi
+      // SWF'i yükle
+      player.load({ url: file });
+
+      // Tam ekran butonu
       const fsBtn = document.getElementById('fsBtn');
-
-      async function toggleFullscreen() {
-        try {
-          if (!document.fullscreenElement) {
-            await wrap.requestFullscreen({ navigationUI: "hide" });
-          } else {
-            await document.exitFullscreen();
-          }
-        } catch (e) {
-          // Bazı ortamlarda hata bastır
-          console.warn('Fullscreen toggle failed:', e);
+      fsBtn.onclick = async () => {
+        if (!document.fullscreenElement) {
+          await wrap.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
         }
-      }
-
-      fsBtn.addEventListener('click', toggleFullscreen);
-
-      // Duruma göre buton metnini güncelle
-      document.addEventListener('fullscreenchange', () => {
-        fsBtn.textContent = document.fullscreenElement ? 'Çıkış' : 'Tam ekran';
-        fsBtn.setAttribute('aria-label', fsBtn.textContent);
+      };
+      document.addEventListener("fullscreenchange", ()=>{
+        fsBtn.textContent = document.fullscreenElement ? "Çıkış" : "Tam ekran";
       });
-
-      // Pencere yeniden boyutlanınca player zaten sarmalayıcıyı doldurur,
-      // oran CSS ile korunur; ekstra işleme gerek yok.
     })();
   </script>
 </body>
