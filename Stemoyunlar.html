@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ruffle Wrapper (Tam Ekran Dış Tuş - Sağ Alt)</title>
+  <title>Ruffle Wrapper (Sağ Alt Tam Ekran/Çıkış Tuşu)</title>
   <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
   <style>
     :root { --w: 800; --h: 600; }
@@ -22,7 +22,7 @@
       background:#000!important;
     }
 
-    /* Sağ alt köşede sabit tam ekran tuşu */
+    /* Sağ alt köşede sabit tam ekran/çıkış butonu */
     .fs-btn {
       position:fixed;
       bottom:15px; right:15px;
@@ -41,7 +41,7 @@
     <ruffle-player id="rufflePlayer"></ruffle-player>
   </div>
 
-  <!-- SWF dışında sağ alt köşede sabit tam ekran butonu -->
+  <!-- Sağ alt köşede sabit buton -->
   <button class="fs-btn" id="fsBtn" type="button">Tam ekran</button>
 
   <script>
@@ -95,9 +95,13 @@
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         }
       };
-      document.addEventListener("fullscreenchange", ()=>{
+
+      // Yazıyı duruma göre değiştir
+      function updateBtn() {
         fsBtn.textContent = document.fullscreenElement ? "Çıkış" : "Tam ekran";
-      });
+      }
+      document.addEventListener("fullscreenchange", updateBtn);
+      document.addEventListener("webkitfullscreenchange", updateBtn);
     })();
   </script>
 </body>
