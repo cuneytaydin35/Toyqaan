@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ruffle Wrapper (Autoplay + Unmute Fix)</title>
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+  <style>
+    :root { --w: 800; --h: 600; }
+    html, body { height:100%; margin:0; background:#000; }
+
+    .ruffle-wrap {
+      position:relative;
+      width:100%; max-width:100vw;
+      aspect-ratio: calc(var(--w)/var(--h));
+      background:#000; overflow:hidden;
+    }
+    .ruffle-wrap ruffle-player,
+    .ruffle-wrap .ruffle-player {
+      width:100%; height:100%; display:block;
+      background:#000!important;
+    }
+  </style>
+</head>
+<body>
+  <div class="ruffle-wrap" id="ruffleWrap" style="--w:800;--h:600;">
+    <ruffle-player id="rufflePlayer"></ruffle-player>
+  </div>
+
+  <script>
+    (function(){
+      const ruffle = (window.RufflePlayer && window.RufflePlayer.newest)
+        ? window.RufflePlayer.newest()
+        : window.RufflePlayer;
+      const placeholder = document.getElementById('rufflePlayer');
+      const player = ruffle.createPlayer();
+      placeholder.replaceWith(player);
+
+      // URL parametresinden SWF seç
+      const params = new URLSearchParams(window.location.search);
+      const file = params.get("file") || "your.swf";
+
+      // SWF'i yükle (unmute overlay gizli)
+      player.load({ url: file, unmuteOverlay: "hidden" })
+        .catch(err => console.warn("SWF load error:", err));
+
+      // İlk kullanıcı etkileşiminde başlat
+      function startPlay() {
+        try { player.unmute(); } catch(e){}
+        player.play().then(() => {
+          if (player.focus) player.focus();
+        }).catch(err => console.warn("Başlatılamadı:", err));
+
+        document.removeEventListener("click", startPlay);
+        document.removeEventListener("touchstart", startPlay);
+        document.removeEventListener("keydown", startPlay);
+      }
+      document.addEventListener("click", startPlay);
+      document.addEventListener("touchstart", startPlay);
+      document.addEventListener("keydown", startPlay);
+
+      // Sekme geri gelince tekrar devam ettir
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          player.play().catch(()=>{});
+          if (player.focus) player.focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
