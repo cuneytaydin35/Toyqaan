@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yanardağ Deneyi Sınavı</title>
+
+<!-- Google Font: Caudex -->
+<link href="https://fonts.googleapis.com/css2?family=Caudex:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  html, body {
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: "Caudex", serif;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .container {
+    background: #26B4D7;
+    width: 800px;
+    height: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    text-align: center;
+    padding: 18px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+ /* 📱 Mobil görünüm */
+@media (max-width: 600px) {
+  /* 🔹 Kolay ayar yapman için değişkenler */
+  :root {
+    --mobile-font-size: 12px;          /* genel yazı boyutu */
+    --mobile-button-font-size: 10px;   /* düğme yazı boyutu */
+    --mobile-option-font-size: 10px;   /* seçenek (cevap) yazı boyutu */
+  }
+
+  .container {
+    width: 300px;
+    height: 400px;
+    padding: 10px;
+    font-size: var(--mobile-font-size);
+  }
+
+  button {
+    font-size: var(--mobile-button-font-size);
+    padding: 4px 8px;
+  }
+
+  .options label {
+    font-size: var(--mobile-option-font-size);
+    padding: 8px 10px;
+  }
+
+  h1 {
+    font-size: 14px;
+  }
+
+  h2, h3 {
+    font-size: 12px;
+  }
+
+  p {
+    font-size: 11px;
+  }
+}
+
+  #q-counter {
+    color: rgba(255,255,255,0.9);
+    font-size: 0.95em;
+    margin-bottom: 6px;
+  }
+
+  h1, h2, h3, p {
+    color: white;
+    margin: 6px 0;
+  }
+
+  button {
+    background: #FDC308;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 8px;
+    font-family: "Caudex", serif;
+  }
+
+  button:hover {
+    background: #ff9100;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 12px auto;
+    width: 90%;
+  }
+
+  .options label {
+    display: block;
+    width: 100%;
+    margin: 6px 0;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.08);
+    border: 2px solid transparent;
+    transition: background-color 0.18s ease, border-color 0.18s ease;
+    text-align: center;
+    color: white;
+  }
+
+  .options input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .options label.selected {
+    background: #FDC308;
+    color: #fff;
+    border-color: #f5b600;
+  }
+
+  #score-text strong {
+    color: #FDC308;
+  }
+
+  #question-text {
+    padding: 0 6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+  <!-- Hoşgeldiniz ekranı -->
+  <div id="welcome-screen">
+    <h1>Merhaba Bilime Meraklı Çocuk!</h1>
+    <button onclick="goToDifficulty()">TESTE BAŞLA</button>
+  </div>
+
+  <!-- Zorluk seçimi -->
+  <div id="difficulty-screen" class="hidden">
+    <h2>SEVİYENİ SEÇ</h2>
+    <button onclick="startQuiz('kolay')">ANAOKUL</button>
+    <button onclick="startQuiz('normal')">İLKOKUL</button>
+    <button onclick="startQuiz('zor')">ORTAOKUL</button>
+  </div>
+
+  <!-- Sınav ekranı -->
+  <div id="quiz-screen" class="hidden">
+    <div id="q-counter"></div>
+    <h3 id="question-text"></h3>
+    <div class="options" id="options"></div>
+    <div>
+      <button id="prev-btn" onclick="prevQuestion()">◀ Geri</button>
+      <button id="next-btn" onclick="nextQuestion()">İleri ▶</button>
+    </div>
+  </div>
+
+  <!-- Sonuç ekranı -->
+  <div id="result-screen" class="hidden">
+    <h2>Sonuç</h2>
+    <p id="score-text"></p>
+    <button onclick="restart()">Yeniden Başla</button>
+  </div>
+</div>
+
+<script>
+const FONT_SIZES = { welcome: 20, difficulty: 20, quiz: 15, result: 20 };
+const MIN_FONT = 12, MAX_FONT = 32;
+const questions = [
+  // Kolay (1–5)
+  { q: "Yanardağ deneyinde hangi malzeme yanardağ görüntüsünü oluşturmak için kullanılır?", a: ["Limon tuzu","Kraft kağıdı","Deterjan","Plastik bardak"], correct: 1 },
+  { q: "Deneyde gıda boyası ne amaçla kullanılır?", a: ["Renk vermek için","Köpürmeyi artırmak için","Şişeyi doldurmak için","Kokuyu gidermek için"], correct: 0 },
+  { q: "Deneyde hangi madde kabarmayı sağlar?", a: ["Kalsiyum karbonat","Su","Kraft kağıdı","Plastik bardak"], correct: 0 },
+  { q: "Şişenin içine en son hangi madde atılır?", a: ["Kalsiyum karbonat","Deterjan","Limon tuzu","Gıda boyası"], correct: 2 },
+  { q: "Deneyin sonunda ne olur?", a: ["Şişe patlar","Yanardağ patlaması gibi bir görüntü oluşur","Kağıt yanar","Renkler kaybolur"], correct: 1 },
+
+  // Normal (6–10)
+  { q: "Şişenin kapağını kapattıktan sonra neden çalkalanır?", a: ["Karbonat erisin diye","Kağıt yapışsın diye","Şişe ısınsın diye","Renk değişsin diye"], correct: 0 },
+  { q: "Şişe neden plastik bardağın içine konur?", a: ["Şişeyi sabitlemek için","Köpürmeyi artırmak için","Kağıdı tutmak için","Deterjanı saklamak için"], correct: 0 },
+  { q: "Deterjanın deneydeki görevi nedir?", a: ["Köpürmeyi artırmak","Rengi koyulaştırmak","Suyu azaltmak","Limon tuzunu eritmek"], correct: 0 },
+  { q: "Hangi iki madde karışınca yanardağ etkisi oluşur?", a: ["Deterjan ve su","Kalsiyum karbonat ve limon tuzu","Gıda boyası ve kraft kağıdı","Plastik bardak ve deterjan"], correct: 1 },
+  { q: "Deney bittikten sonra söylenen ifade hangisidir?", a: ["Deney başarısız oldu","Deneyin ortasında durduk","Bir deneyimizin daha sonuna geldik","Malzemeleri toplayalım"], correct: 2 },
+
+  // Zor (11–15)
+  { q: "Limon tuzu ile karbonat tepkimeye girdiğinde hangi gaz açığa çıkar?", a: ["Oksijen","Karbondioksit","Hidrojen","Azot"], correct: 1 },
+  { q: "Deneyde kullanılan karbonat hangi kimyasal bileşiği temsil eder?", a: ["Sodyum klorür","Kalsiyum karbonat","Magnezyum oksit","Karbondioksit"], correct: 1 },
+  { q: "Eğer deterjan eklenmezse ne olur?", a: ["Renk oluşmaz","Köpük az olur","Tepkime gerçekleşmez","Kağıt erir"], correct: 1 },
+  { q: "Kraft kağıdının kullanılmasının amacı nedir?", a: ["Tepkimede renk değiştirmek","Görsel olarak yanardağ şekli oluşturmak","Tepkimeyi hızlandırmak","Gaz çıkışını sağlamak"], correct: 1 },
+  { q: "Deneydeki kimyasal tepkimeyi en iyi açıklayan ifade hangisidir?", a: ["Asit-baz tepkimesi sonucu gaz çıkışı oluşur","Katıların çözünmesiyle renk değişimi olur","Buharlaşma sonucu köpük çıkar","Fiziksel karışım meydana gelir"], correct: 0 }
+];
+
+let selectedDifficulty="", currentQuestions=[], currentIndex=0, userAnswers=[];
+
+function applyFontFor(screenName){
+  const main=document.getElementById("main-container");
+  let sz=FONT_SIZES[screenName];
+  if(typeof sz!=="number") sz=16;
+  if(sz<MIN_FONT) sz=MIN_FONT;
+  if(sz>MAX_FONT) sz=MAX_FONT;
+  main.style.fontSize=sz+"px";
+}
+
+function goToDifficulty(){
+  document.getElementById("welcome-screen").classList.add("hidden");
+  document.getElementById("difficulty-screen").classList.remove("hidden");
+  applyFontFor("difficulty");
+}
+
+function startQuiz(level){
+  selectedDifficulty=level;
+  let total=level==="kolay"?5:level==="normal"?10:15;
+  currentQuestions=questions.slice(0,total);
+  userAnswers=new Array(total).fill(null);
+  currentIndex=0;
+  document.getElementById("difficulty-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.remove("hidden");
+  applyFontFor("quiz");
+  showQuestion();
+}
+
+function showQuestion(){
+  const q=currentQuestions[currentIndex];
+  document.getElementById("q-counter").textContent=`${currentIndex+1}/${currentQuestions.length}`;
+  document.getElementById("question-text").textContent=q.q;
+  const optionsDiv=document.getElementById("options");
+  optionsDiv.innerHTML="";
+  q.a.forEach((opt,i)=>{
+    const label=document.createElement("label");
+    const input=document.createElement("input");
+    input.type="radio"; input.name="option"; input.value=i;
+    if(userAnswers[currentIndex]===i) input.checked=true;
+    const span=document.createElement("span"); span.textContent=opt;
+    input.addEventListener("change",()=>{
+      userAnswers[currentIndex]=i;
+      document.querySelectorAll(".options label").forEach(lb=>lb.classList.remove("selected"));
+      label.classList.add("selected");
+    });
+    if(userAnswers[currentIndex]===i) label.classList.add("selected");
+    label.appendChild(input); label.appendChild(span);
+    optionsDiv.appendChild(label);
+  });
+  document.getElementById("prev-btn").style.display=currentIndex===0?"none":"inline-block";
+  document.getElementById("next-btn").textContent=currentIndex===currentQuestions.length-1?"Sınavı Bitir":"İleri ▶";
+}
+
+function nextQuestion(){
+  const sel=document.querySelector('input[name="option"]:checked');
+  if(sel) userAnswers[currentIndex]=parseInt(sel.value);
+  if(currentIndex===currentQuestions.length-1) finishQuiz(); else {currentIndex++; showQuestion();}
+}
+
+function prevQuestion(){
+  const sel=document.querySelector('input[name="option"]:checked');
+  if(sel) userAnswers[currentIndex]=parseInt(sel.value);
+  if(currentIndex>0){currentIndex--; showQuestion();}
+}
+
+function finishQuiz(){
+  let correct=0;
+  userAnswers.forEach((ans,i)=>{if(ans===currentQuestions[i].correct) correct++;});
+  const score=Math.round((correct/currentQuestions.length)*100);
+  document.getElementById("quiz-screen").classList.add("hidden");
+  document.getElementById("result-screen").classList.remove("hidden");
+  applyFontFor("result");
+  document.getElementById("score-text").innerHTML=`Puanın: <strong>${score}</strong><br>${score>=70?"🎉 Başardın!":"😔 Tekrar deneyebilirsin."}`;
+}
+
+function restart(){
+  document.getElementById("result-screen").classList.add("hidden");
+  document.getElementById("welcome-screen").classList.remove("hidden");
+  applyFontFor("welcome");
+}
+
+applyFontFor("welcome");
+</script>
+</body>
+</html>
